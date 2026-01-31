@@ -143,7 +143,7 @@ const QuantumSimulator: React.FC<QuantumSimulatorProps> = ({ onKeyGenerated, onS
         - QBER ปัจจุบัน: ${qber.toFixed(2)}%
         - ระดับ Noise: ${depol} (Depol) / ${damp} (Damp)
         
-        สรุปความเสถียรและการดักฟังที่อาจเกิดขึ้นอย่างรวดเร็ว (Low Latency Response mode)`,
+        สรุปความเสถียรภาพและการดักฟังที่อาจเกิดขึ้นอย่างรวดเร็ว (Low Latency Response mode)`,
         config: {
           temperature: 0.1,
           systemInstruction: "คุณคือระบบวิเคราะห์ความปลอดภัยควอนตัมความเร็วสูง (Low-Latency mode) ตอบสั้น กระชับ เป็นภาษาไทย โดยเน้นความเสี่ยง Man-in-the-Middle (MITM)"
@@ -237,21 +237,27 @@ const QuantumSimulator: React.FC<QuantumSimulatorProps> = ({ onKeyGenerated, onS
               </div>
             </div>
 
-            <div className="p-5 bg-cyan-500/5 border border-cyan-500/20 rounded-2xl mb-10 flex items-center gap-5 shadow-inner">
-              <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400">
-                <MousePointer2 size={24} className="animate-bounce" />
-              </div>
-              <div>
+            <div className="p-5 bg-cyan-500/5 border border-cyan-500/20 rounded-2xl mb-10 flex flex-col gap-3 shadow-inner">
+              <div className="flex items-center gap-5">
+                <div className="p-3 bg-cyan-500/10 rounded-xl text-cyan-400 shrink-0">
+                  <MousePointer2 size={24} className="animate-bounce" />
+                </div>
                 <p className="text-sm text-slate-300">
                   <span className="font-bold text-cyan-400">Interactive Setup:</span> คลิกที่ Qubits เพื่อสลับ <span className="underline underline-offset-4 decoration-cyan-500/50">Basis</span> ก่อนทำการวัดค่าระบบ
                 </p>
-                <div className="flex gap-4 mt-2">
-                  <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
-                    <div className="w-2.5 h-2.5 rounded-sm bg-cyan-500/40 border border-cyan-500/50" /> COMP_Z BASIS
-                  </div>
-                  <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
-                    <div className="w-2.5 h-2.5 rounded-sm bg-purple-500/40 border border-purple-500/50" /> HADAMARD_X BASIS
-                  </div>
+              </div>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 pl-4 md:pl-20 text-[10px] text-slate-500 font-bold">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-sm bg-cyan-500/40 border border-cyan-500/50" /> Z_BASIS
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-sm bg-purple-500/40 border border-purple-500/50" /> X_BASIS
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-sm bg-yellow-500/40 border border-yellow-500/50 shadow-[0_0_4px_rgba(234,179,8,0.5)]" /> DEPOLARIZED
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-sm bg-blue-500/40 border border-blue-500/50 shadow-[0_0_4px_rgba(59,130,246,0.5)]" /> DAMPED
                 </div>
               </div>
             </div>
@@ -294,11 +300,21 @@ const QuantumSimulator: React.FC<QuantumSimulatorProps> = ({ onKeyGenerated, onS
 
                   <div className={`
                     w-16 h-16 rounded-full border-2 flex items-center justify-center relative overflow-hidden transition-all duration-300 shadow-xl
-                    ${q.measured !== undefined 
-                      ? (q.isError ? 'border-red-500 bg-red-500/10 shadow-red-500/30' : 'border-cyan-500 bg-cyan-500/10 shadow-cyan-500/30') 
-                      : `border-slate-800 bg-slate-900/40 ${q.basis === 0 ? 'group-hover:shadow-[0_0_20px_rgba(34,211,238,0.5)]' : 'group-hover:shadow-[0_0_20px_rgba(168,85,247,0.5)]'}`
+                    ${q.measured !== undefined
+                      ? q.isError
+                        ? 'border-red-500 bg-red-500/10 shadow-red-500/30'
+                        : q.measured === 1
+                          ? 'border-cyan-400 bg-cyan-500/20 shadow-[0_0_25px_rgba(34,211,238,0.5)]'
+                          : 'border-cyan-600 bg-cyan-500/10 shadow-cyan-500/20'
+                      : `border-slate-800 ${q.bit === 1 ? 'bg-slate-900/60' : 'bg-slate-950/60'} ${q.basis === 0 ? 'group-hover:shadow-[0_0_20px_rgba(34,211,238,0.5)]' : 'group-hover:shadow-[0_0_20px_rgba(168,85,247,0.5)]'}`
                     }
                   `}>
+                    {q.measured !== undefined && q.noiseEffect !== 'none' && (
+                      <div className={`absolute inset-0.5 rounded-full animate-pulse
+                        ${q.noiseEffect === 'depolarized' ? 'bg-yellow-500/20 shadow-[inset_0_0_10px_rgba(234,179,8,0.7)] border border-yellow-500/50' : ''}
+                        ${q.noiseEffect === 'damped' ? 'bg-blue-500/20 shadow-[inset_0_0_10px_rgba(59,130,246,0.7)] border border-blue-500/50' : ''}
+                      `} />
+                    )}
                     <div className={`
                       absolute w-1 h-12 transition-all duration-500 group-hover:scale-110
                       ${q.basis === 1 
@@ -310,9 +326,9 @@ const QuantumSimulator: React.FC<QuantumSimulatorProps> = ({ onKeyGenerated, onS
                     
                     <span className={`
                       relative z-10 font-mono text-3xl font-black transition-all duration-500
-                      ${q.measured !== undefined 
-                        ? (q.isError ? 'text-red-400' : 'text-cyan-400 scale-125') 
-                        : (q.bit === 1 ? 'text-slate-300' : 'text-slate-600')
+                      ${q.measured !== undefined
+                        ? (q.isError ? 'text-red-400' : 'text-cyan-300 scale-125')
+                        : (q.bit === 1 ? 'text-slate-200' : 'text-slate-600')
                       }
                     `}>
                       {q.measured !== undefined ? q.measured : q.bit}
